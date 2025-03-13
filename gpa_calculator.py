@@ -71,10 +71,10 @@ def is_semester_line(line: str) -> bool:
 
 
 def parse_class(line: str) -> Optional[Class]:
-    args = line.split(' ')
+    assert not line.isspace(), "Line cannot be space."
+    args = line.strip().split(' ')
     # case for invalid arguments or all spaces.
     if (len(args) <= 1 
-        or line.isspace()
         or is_semester_line(line)):
         return None
 
@@ -86,7 +86,7 @@ def parse_class(line: str) -> Optional[Class]:
         credits = int(args[1])
     except ValueError:
         return None
-    class_name: str = ' '.join(args[2:]).strip()
+    class_name: str = ' '.join(args[2:])
     return Class(class_name, credits, grade)
 
 
@@ -97,23 +97,27 @@ def get_transcript(filename: str) -> list[Semester]:
         reader = fp.readlines()
     i = 0
     while i < len(reader):
-        line = reader[i]
-        if not is_semester_line(line):
+        semester_line = reader[i]
+        if not is_semester_line(semester_line):
             i += 1
             continue
         # since int truncates leading 0s and whitespace
-        semester_num: int = int(line[9:])
+        semester_num = int(semester_line[9:])
         # print(f'Semester: {semester_num}')
         classes: list[Class] = []
-        while i + 1 < len(reader):
-            cls = parse_class(reader[i+1])
+        i += 1
+        while i < len(reader):
+            line = reader[i]
+            if line.isspace():
+                i += 1
+                continue
+            cls = parse_class(line)
             if cls is None:
                 break
             classes.append(cls)
             i += 1
         semester: Semester = Semester(semester_num, classes)
         transcript.append(semester)
-        i += 1
     return transcript
 
 
@@ -124,13 +128,15 @@ def calculate_gpa(transcript: list[Semester]) -> float:
         for cls in schedule.classes:
             grade_points += get_grade_points(cls)
             credits += cls.credits
+    if credits == 0:
+        return 0
     return grade_points / credits
 
 
 def main() -> None:
     transcript = get_transcript('transcript.txt')
     pprint(transcript)
-    print(f"GPA: {calculate_gpa(transcript)}")
+    print(f"GPA: {calculate_gpa(transcript):.2f}")
 
 
 if __name__ == '__main__':
