@@ -3,6 +3,7 @@ from enum import Enum
 from pprint import pprint
 from typing import Optional
 
+
 class Grade(Enum):
     A = 'A'
     A_MINUS = 'A-'
@@ -52,6 +53,9 @@ class Class:
     name: str # maybe an option for ID
     credits: int
     grade: Grade
+    
+    def __repr__(self) -> str:
+        return f"Class(\"{self.name}\", {self.credits}, {self.grade.value})"
 
 
 @dataclass
@@ -77,7 +81,6 @@ def parse_class(line: str) -> Optional[Class]:
     if (len(args) <= 1 
         or is_semester_line(line)):
         return None
-
     grade = parse_grade(args[0])
     if grade is None:
         return None
@@ -141,3 +144,4 @@ def main() -> None:
 
 if __name__ == '__main__':
     main()
+
